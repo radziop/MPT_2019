@@ -12,7 +12,9 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 
+
 class PacketStreamerHandler:
+
   def __init__(self):
     logging.handlers.codecs = None
     self.log = logging.getLogger("packetstreamer")
@@ -23,7 +25,7 @@ class PacketStreamerHandler:
 
   def ping(self):
     self.log.debug('ping()')
-    return true
+    return True
 
   def pushPacketSync(self, packet):
     self.log.debug('receive a packet synchronously: %s' %(packet))
@@ -31,6 +33,7 @@ class PacketStreamerHandler:
 
   def pushPacketAsync(self, packet):
     self.log.debug('receive a packet Asynchronously: %s' %(packet))
+
 
 handler = PacketStreamerHandler()
 processor = PacketStreamer.Processor(handler)
@@ -41,9 +44,9 @@ pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
 
 # You could do one of these for a multithreaded server
-#server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
-#server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
+# server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
+# server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
 
-print 'Starting the server...'
+print('Starting the server...')
 server.serve()
-print 'done.'
+print('done.')
