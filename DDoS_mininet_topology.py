@@ -23,7 +23,7 @@ class MyTopo(Topo):
         clientHost1 = self.addHost('ch')
         clientHost2 = self.addHost('ch2')
         # Add links
-        self.addLink( wwwServer,switch)
+        self.addLink( wwwServer,switch, bw = 10)
         self.addLink( attackerHost1,switch)
         self.addLink( attackerHost2,switch)
         self.addLink( attackerHost3,switch)
