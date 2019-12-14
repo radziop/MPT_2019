@@ -17,7 +17,7 @@ class MyTopo( Topo ):
         switch = self.addSwitch( 's1' )
         clientHost = self.addHost( 'ch' )
         # Add links
-        self.addLink( wwwServer, switch )
+        self.addLink( wwwServer, switch, bw = 10)
         self.addLink( attackerHost, switch )
         self.addLink( clientHost, switch )
 
