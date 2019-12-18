@@ -4,16 +4,16 @@ One switch, host acting as WWW server, one client host and one DoS attacker host
            --- attacker --- attacker --- attacker
                  
 to run topology:
-sudo mn --custom DDoS_mininet_topology.py --topo mytopo_dos          
+sudo mn --custom DDoS_mininet_topology.py --topo mytopo_ddos --link=tc
 """
 from mininet.topo import Topo
 
-class MyTopo(Topo):
+class MyTopo_ddos(Topo):
     #"Simple topology example."
-    def __init__( elf):
+    def __init__(self):
         #"Create custom topo."
         # Initialize topology
-        Topo.__init__( elf)
+        Topo.__init__(self)
         # Add hosts and switches
         wwwServer = self.addHost('www')
         attackerHost1 = self.addHost('ah1')
@@ -23,11 +23,11 @@ class MyTopo(Topo):
         clientHost1 = self.addHost('ch')
         clientHost2 = self.addHost('ch2')
         # Add links
-        self.addLink( wwwServer,switch, bw = 10)
-        self.addLink( attackerHost1,switch)
-        self.addLink( attackerHost2,switch)
-        self.addLink( attackerHost3,switch)
-        self.addLink( clientHost1,switch)
-        self.addLink( clientHost2,switch)
+        self.addLink(wwwServer,switch,bw=10)
+        self.addLink(attackerHost1,switch)
+        self.addLink(attackerHost2,switch)
+        self.addLink(attackerHost3,switch)
+        self.addLink(clientHost1,switch)
+        self.addLink(clientHost2,switch)
 
-topos = { 'mytopo_dos': ( lambda: MyTopo() ) }
+topos = { 'mytopo_ddos': ( lambda: MyTopo_ddos() ) }
