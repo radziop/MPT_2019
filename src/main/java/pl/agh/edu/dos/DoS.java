@@ -2,6 +2,7 @@ package pl.agh.edu.dos;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 	protected static Logger logger;
 	
 	private Map<String, Integer> counterMap = new HashMap<>();
+	//private Map<String, List<Integer>> srcPortMap = new HashMap<>();
+	//List<Integer> portList = new ArrayList<>();
 
 	@Override
 	public String getName() {
@@ -79,7 +82,7 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-		logger.info("******************* New Packet ***************************************");
+		//logger.info("******************* New Packet ***************************************");
 		
 		PacketAnalyzer analyzer = new PacketAnalyzer(counterMap);
 		analyzer.packetExtract(cntx);

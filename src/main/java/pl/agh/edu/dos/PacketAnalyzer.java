@@ -1,6 +1,7 @@
 package pl.agh.edu.dos;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.lang.Integer;
 
@@ -33,10 +34,10 @@ public class PacketAnalyzer {
 	private IPv4Address dstIP;
 	private TransportPort srcPort;
 	private TransportPort dstPort;
-	
-	
+	private short flags;
+
 	private Map<String, Integer> counterMap;
-	
+
 	public PacketAnalyzer(Map<String, Integer> counterMap) {
 		this.counterMap = counterMap;
 	}
@@ -58,8 +59,7 @@ public class PacketAnalyzer {
 		if (ipv4.getProtocol() == IpProtocol.TCP) {
 			srcIP = ipv4.getSourceAddress();
 			dstIP = ipv4.getDestinationAddress();
-			
-			
+
 			tcp = (TCP) ipv4.getPayload();
 			extractTCP();
 		}
@@ -68,27 +68,27 @@ public class PacketAnalyzer {
 	public void extractTCP() {
 		srcPort = tcp.getSourcePort();
 		dstPort = tcp.getDestinationPort();
-		
+		flags = tcp.getFlags();
 		flowCounter();
 	}
 
 	public void flowCounter() {
-		//String logMessage ="New flow: src_ip: " + srcIP.toString() + ", src_TCP_port: " + srcPort.toString() +  ", dst_ip: " + dstIP.toString() + ", dst_TCP_port: " + dstPort.toString();
-		//logger.info("{}", logMessage);
-		
-		if (dstIP.toString().equals("10.0.0.3")){
-			if(counterMap.containsKey(srcIP.toString())) {
-				counterMap.put(srcIP.toString(), counterMap.get(srcIP.toString())+1);
-				}
-			else {
+		// String logMessage ="New flow: src_ip: " + srcIP.toString() + ", src_TCP_port:
+		// " + srcPort.toString() + ", dst_ip: " + dstIP.toString() + ", dst_TCP_port: "
+		// + dstPort.toString();
+		// logger.info("{}", logMessage);
+
+		if (dstIP.toString().equals("10.0.0.3") && flags == 2) { // if SYN flag set
+			if (counterMap.containsKey(srcIP.toString())) {
+				counterMap.put(srcIP.toString(), counterMap.get(srcIP.toString()) + 1);
+			} else {
 				counterMap.put(srcIP.toString(), 1);
 			}
-			String logMessage = "New flow: Source IP: " + srcIP.toString() + " Connections counter: " + counterMap.get(srcIP.toString()).toString();
+			String logMessage = "New flow: Source IP: " + srcIP.toString() + " Connections counter: "
+					+ counterMap.get(srcIP.toString()).toString();
 			logger.info("{}", logMessage);
 		}
-		
+
 	}
-	
-	
 
 }
