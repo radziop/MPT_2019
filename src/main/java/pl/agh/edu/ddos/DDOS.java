@@ -19,23 +19,12 @@ public class DDOS implements IOFMessageListener, IFloodlightModule {
 
 	protected IFloodlightProviderService floodlightProvider;
 	protected static Logger logger;
-	@Override
-	public void init(FloodlightModuleContext context) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
-		floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
-		logger.info("*******DDoS PROTECTION START *******");
-
-	}
+	
+	private Map<String, Integer> counterMap = new HashMap<>();
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return DDOS.class.getSimpleName();
+		return DoS.class.getSimpleName();
 	}
 
 	@Override
@@ -64,15 +53,30 @@ public class DDOS implements IOFMessageListener, IFloodlightModule {
 
 	@Override
 	public Collection<Class<? extends IFloodlightService>> getModuleDependencies() {
-		// TODO Auto-generated method stub
-		return null;
+		Collection<Class<? extends IFloodlightService>> l = new ArrayList<Class<? extends IFloodlightService>>();
+		l.add(IFloodlightProviderService.class);
+		return l;
 	}
 
 	@Override
-	public net.floodlightcontroller.core.IListener.Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-		logger.info("************* NEW PACKET IN *************");
-		PacketExtractor extractor = new PacketExtractor();
-		extractor.packetExtract(cntx);
+	public void init(FloodlightModuleContext context) throws FloodlightModuleException {
+		floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+		logger = LoggerFactory.getLogger(DDOS.class);
+
+	}
+
+	@Override
+	public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
+		floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
+		logger.info("******************* DDoS Protection started **************************");
+	}
+
+	@Override
+	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
+		
+		PacketAnalyzer analyzer = new PacketAnalyzer(counterMap);
+		analyzer.packetExtract(cntx);
+		
 		return Command.CONTINUE;
 	}
 
