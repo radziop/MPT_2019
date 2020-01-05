@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.lang.Integer;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.IpProtocol;
 import org.projectfloodlight.openflow.types.TransportPort;
+import org.python.antlr.PythonParser.and_expr_return;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.floodlightcontroller.core.FloodlightContext;
@@ -84,11 +87,32 @@ public class PacketAnalyzer {
 			} else {
 				counterMap.put(srcIP.toString(), 1);
 			}
-			String logMessage = "New flow: Source IP: " + srcIP.toString() + " Connections counter: "
+			String logMessage = "New flow: Source IP: " + srcIP.toString() + "; Connections counter: "
 					+ counterMap.get(srcIP.toString()).toString();
 			logger.info("{}", logMessage);
+			scheduleCounterDecrementation(10000);
 		}
 
 	}
+	
+	public void scheduleCounterDecrementation(Integer timer) {
+		new java.util.Timer().schedule( 
+		        new java.util.TimerTask() {
+		            @Override
+		            public void run() {
+		                decrementFlowCounter();
+		            }
+		        }, 
+		        timer 
+		);
+	}
 
+	public void decrementFlowCounter() {
+		if (counterMap.containsKey(srcIP.toString()) && counterMap.get(srcIP.toString()) > 0) {
+			counterMap.put(srcIP.toString(), counterMap.get(srcIP.toString()) - 1);
+		}
+		String logMessage = "Counter updated for flow with Source IP: " + srcIP.toString() + "; Current connections counter: "
+				+ counterMap.get(srcIP.toString()).toString();
+		logger.info("{}", logMessage);
+	}
 }
