@@ -123,7 +123,10 @@ public class PacketAnalyzer {
 	}
 	
 	public void blockHostByIpAddress() {
-		// TODO
+		// TODO send curl command
+		// ovs-ofctl del-flows test "in_port=1"
+		String logMessage = "Host with source IP: " + srcIP.toString() + " blocked for " + blockingTime + " seconds!";
+		logger.info("{}", logMessage);
 		
 		// Schedule unblocking the host after 'blockingTime' timer expires
 		new java.util.Timer().schedule(new java.util.TimerTask() {
@@ -133,6 +136,9 @@ public class PacketAnalyzer {
 	}
 	
 	public void unblockHostByIpAddress() {
-		// TODO
+		// TODO send curl command
+		// ovs-ofctl del-flows test "in_port=1"
+		String logMessage = "Host with source IP: " + srcIP.toString() + " unblocked.";
+		logger.info("{}", logMessage);
 	}
 }
