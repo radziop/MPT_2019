@@ -39,9 +39,13 @@ public class PacketAnalyzer {
 	private short flags;
 
 	private Map<String, Integer> counterMap;
+	private Integer simultaneousConnectionThreshold;
+	private Integer blockingTime;
 
-	public PacketAnalyzer(Map<String, Integer> counterMap) {
+	public PacketAnalyzer(Map<String, Integer> counterMap, Integer simultaneousConnectionThreshold, Integer blockingTime) {
 		this.counterMap = counterMap;
+		this.simultaneousConnectionThreshold = simultaneousConnectionThreshold;
+		this.blockingTime = blockingTime;
 	}
 
 	public void packetExtract(FloodlightContext cntx) {
@@ -89,6 +93,9 @@ public class PacketAnalyzer {
 			String logMessage = "New flow: Source IP: " + srcIP.toString() + "; Connection counter: "
 					+ counterMap.get(srcIP.toString()).toString();
 			logger.info("{}", logMessage);
+			if (counterMap.get(srcIP.toString()) > simultaneousConnectionThreshold) {
+				blockHostByIpAddress();
+			}
 			scheduleCounterDecrementation(10000);
 		}
 
@@ -113,5 +120,19 @@ public class PacketAnalyzer {
 		String logMessage = "Counter updated for flow with Source IP: " + srcIP.toString() + "; Current connection counter: "
 				+ counterMap.get(srcIP.toString()).toString();
 		logger.info("{}", logMessage);
+	}
+	
+	public void blockHostByIpAddress() {
+		// TODO
+		
+		// Schedule unblocking the host after 'blockingTime' timer expires
+		new java.util.Timer().schedule(new java.util.TimerTask() {
+			@Override
+		    public void run() {unblockHostByIpAddress();}
+		}, blockingTime);
+	}
+	
+	public void unblockHostByIpAddress() {
+		// TODO
 	}
 }

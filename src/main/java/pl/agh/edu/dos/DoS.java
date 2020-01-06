@@ -30,6 +30,8 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 	private Map<String, Integer> counterMap = new HashMap<>();
 	//private Map<String, List<Integer>> srcPortMap = new HashMap<>();
 	//List<Integer> portList = new ArrayList<>();
+	private Integer simultaneousConnectionThreshold = 20;
+	private Integer blockingTime = 30;
 
 	@Override
 	public String getName() {
@@ -84,7 +86,7 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
 		//logger.info("******************* New Packet ***************************************");
 		
-		PacketAnalyzer analyzer = new PacketAnalyzer(counterMap);
+		PacketAnalyzer analyzer = new PacketAnalyzer(counterMap, simultaneousConnectionThreshold, blockingTime);
 		analyzer.packetExtract(cntx);
 		
 		return Command.CONTINUE;
