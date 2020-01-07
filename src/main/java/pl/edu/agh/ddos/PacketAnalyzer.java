@@ -1,4 +1,4 @@
-package pl.agh.edu.dos;
+package pl.edu.agh.ddos;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.packet.ARP;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
@@ -36,9 +37,9 @@ public class PacketAnalyzer {
 	private TransportPort dstPort;
 	private short flags;
 
-	private Map<String, Integer> counterMap;
+	private Map<IPv4Address, Integer> counterMap;
 
-	public PacketAnalyzer(Map<String, Integer> counterMap) {
+	public PacketAnalyzer(Map<IPv4Address, Integer> counterMap) {
 		this.counterMap = counterMap;
 	}
 
@@ -75,13 +76,13 @@ public class PacketAnalyzer {
 	public void flowCounter() {
 
 		if (dstIP.toString().equals("10.0.0.3") && flags == 2) { // if SYN flag set
-			if (counterMap.containsKey(srcIP.toString()+":"+srcPort.toString())) {
-				counterMap.put(srcIP.toString()+":"+srcPort.toString(), counterMap.get(srcIP.toString()+":"+srcPort.toString()) + 1);
+			if (counterMap.containsKey(srcIP)) {
+				counterMap.put(srcIP, counterMap.get(srcIP) + 1);
 			} else {
-				counterMap.put(srcIP.toString()+":"+srcPort.toString(), 1);
+				counterMap.put(srcIP, 1);
 			}
-			String logMessage = "New flow: Source IP/Port: " + srcIP.toString()+":"+srcPort.toString() + " Connections counter: "
-					+ counterMap.get(srcIP.toString()+":"+srcPort.toString()).toString();
+			String logMessage = "New flow: Source IP: " + srcIP.toString() + " Connections counter: "
+					+ counterMap.get(srcIP).toString();
 			logger.info("{}", logMessage);
 		}
 

@@ -1,17 +1,36 @@
-package pl.agh.edu.ddos;
+package pl.edu.agh.ddos;
 
 
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
+import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.util.FlowModUtils;
+import net.floodlightcontroller.util.OFMessageUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
+import org.projectfloodlight.openflow.protocol.OFFlowModFlags;
 import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.match.Match;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.EthType;
+import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.OFBufferId;
+import org.projectfloodlight.openflow.types.OFPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +39,11 @@ public class DDOS implements IOFMessageListener, IFloodlightModule {
 	protected IFloodlightProviderService floodlightProvider;
 	protected static Logger logger;
 	
-	private Map<String, Integer> counterMap = new HashMap<>();
+	private Map<IPv4Address, Integer> counterMap = new HashMap<>();
 
 	@Override
 	public String getName() {
-		return DoS.class.getSimpleName();
+		return DDOS.class.getSimpleName();
 	}
 
 	@Override
@@ -76,7 +95,26 @@ public class DDOS implements IOFMessageListener, IFloodlightModule {
 		
 		PacketAnalyzer analyzer = new PacketAnalyzer(counterMap);
 		analyzer.packetExtract(cntx);
-		
+		for(IPv4Address ip: counterMap.keySet()) {
+			if(counterMap.get(ip) >= 20) {
+				
+		        Match.Builder mb = sw.getOFFactory().buildMatch();
+				mb.setExact(MatchField.ETH_TYPE, EthType.IPv4);
+				mb.setExact(MatchField.IPV4_SRC, ip);
+				Match m = mb.build();
+				
+		        OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd();
+		        List<OFAction> actions = new ArrayList<>();
+		        
+		        fmb.setHardTimeout(0)
+		        .setIdleTimeout(120)
+		        .setBufferId(OFBufferId.NO_BUFFER) 
+		        .setMatch(m)
+		        .setPriority(Integer.MAX_VALUE);
+		        FlowModUtils.setActions(fmb, actions, sw);
+		        sw.write(fmb.build());
+			}
+		}
 		return Command.CONTINUE;
 	}
 
