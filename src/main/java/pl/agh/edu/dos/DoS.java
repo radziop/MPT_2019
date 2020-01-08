@@ -35,11 +35,11 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 	protected static Logger logger;
 	
 	private Map<IPv4Address, Integer> counterMap = new HashMap<>();
-	private IPv4Address current_ip;
 	private Integer simultaneousConnectionThreshold = 4;
 	private Integer blockingTime = 30;
 	private List<IPv4Address> blocked_hosts = new ArrayList<>();
 
+	
 	@Override
 	public String getName() {
 		return DoS.class.getSimpleName();
@@ -97,10 +97,9 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 		analyzer.packetExtract(cntx);
 		
 		for(IPv4Address ip: counterMap.keySet()) {
-			current_ip = ip;
-			if (counterMap.get(current_ip) > simultaneousConnectionThreshold) {
-				if (!blocked_hosts.contains(current_ip)){
-					blockHostByIpAddress(sw);
+			if (counterMap.get(ip) > simultaneousConnectionThreshold) {
+				if (!blocked_hosts.contains(ip)){
+					blockHostByIpAddress(sw, ip);
 				}
 			}
 		}
@@ -108,11 +107,11 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 		return Command.CONTINUE;
 	}
 
-	public void blockHostByIpAddress(IOFSwitch sw) {
+	public void blockHostByIpAddress(final IOFSwitch sw, final IPv4Address ip_address) {
         Match.Builder mb = sw.getOFFactory().buildMatch();
 			mb.setExact(MatchField.ETH_TYPE, EthType.IPv4);
-			mb.setExact(MatchField.IPV4_SRC, current_ip);
-			Match m = mb.build();
+			mb.setExact(MatchField.IPV4_SRC, ip_address);
+			final Match flow_match = mb.build();
 
         OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd();
         List<OFAction> actions = new ArrayList<>();
@@ -120,29 +119,33 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
         fmb.setHardTimeout(0)
         .setIdleTimeout(120)
         .setBufferId(OFBufferId.NO_BUFFER) 
-        .setMatch(m)
+        .setMatch(flow_match)
         .setPriority(Integer.MAX_VALUE);
         FlowModUtils.setActions(fmb, actions, sw);
         sw.write(fmb.build());
 		
-        blocked_hosts.add(current_ip);
-		String logMessage = "Host with source IP: " + current_ip.toString() + " blocked for " + blockingTime + " seconds!";
+        blocked_hosts.add(ip_address);
+		String logMessage = "Host with source IP: " + ip_address.toString() + " blocked for " + blockingTime + " seconds!";
 		logger.info("{}", logMessage);
 		
 		// Schedule unblocking the host after 'blockingTime' timer expires
 		new java.util.Timer().schedule(new java.util.TimerTask() {
 			@Override
-		    public void run() {unblockHostByIpAddress();}
+		    public void run() {unblockHostByIpAddress(sw, flow_match, ip_address);}
 		}, blockingTime*1000);
 	}
 	
-	public void unblockHostByIpAddress() {
-//		String command = "ovs-ofctl del-flows s1 \"nw_src=" + current_ip + "\"";
-//		OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowDelete();
+	public void unblockHostByIpAddress(IOFSwitch sw, Match flow_match, IPv4Address ip_address) {
+		OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowDelete();
+        fmb.setHardTimeout(0)
+        .setIdleTimeout(120)
+        .setBufferId(OFBufferId.NO_BUFFER) 
+        .setMatch(flow_match)
+        .setPriority(Integer.MAX_VALUE);
+        sw.write(fmb.build());
 		
-		
-		blocked_hosts.remove(current_ip);
-		String logMessage = "Host with source IP: " + current_ip.toString() + " unblocked.";
+		blocked_hosts.remove(ip_address);
+		String logMessage = "Host with source IP: " + ip_address.toString() + " unblocked.";
 		logger.info("{}", logMessage);
 	}
 	
