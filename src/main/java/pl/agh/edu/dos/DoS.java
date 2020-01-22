@@ -86,15 +86,15 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 	@Override
 	public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
 		floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
-		logger.info("******************* DoS Protection started **************************");
+		logger.info("### DoS Protection active ###");
 	}
 
 	@Override
-	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-		//logger.info("******************* New Packet ***************************************");
+	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext floodlightContext) {
+//		logger.info("******************* New Packet ***************************************");
 		
-		PacketAnalyzer analyzer = new PacketAnalyzer(counterMap);
-		analyzer.packetExtract(cntx);
+		FlowCounterUpdater counterUpdater = new FlowCounterUpdater(counterMap);
+		counterUpdater.analyzePacket(floodlightContext);
 		
 		for(IPv4Address ip: counterMap.keySet()) {
 			if (counterMap.get(ip) > simultaneousConnectionThreshold) {
