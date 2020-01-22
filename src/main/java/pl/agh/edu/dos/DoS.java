@@ -35,7 +35,7 @@ public class DoS implements IOFMessageListener, IFloodlightModule {
 	protected static Logger logger;
 	
 	private Map<IPv4Address, Integer> counterMap = new HashMap<>();
-	private Integer simultaneousConnectionThreshold = 4;
+	private Integer simultaneousConnectionThreshold = 15;
 	private Integer blockingTime = 30;
 	private List<IPv4Address> blocked_hosts = new ArrayList<>();
 
